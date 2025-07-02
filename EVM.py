@@ -6,16 +6,17 @@ import random
 st.set_page_config(page_title="EVM – Biomedical Support Dashboard", layout="centered")
 st.markdown("""
     <style>
-        /* Remove full screen icon on images */
+        /* Hide full screen icon on images */
         button[aria-label="View fullscreen"] {
             display: none !important;
         }
-        /* Remove link icon on titles */
-        .css-1v0mbdj.e1fqkh3o3:hover > div > a {
+        /* Hide link icon on headers */
+        section [data-testid="stMarkdownContainer"] a[href^="#"] {
             display: none !important;
         }
     </style>
 """, unsafe_allow_html=True)
+
 st.title("Earned Value Management (EVM): Concept and Industry Applications")
 
 st.header("Project Context")
