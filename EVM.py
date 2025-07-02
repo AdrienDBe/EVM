@@ -4,6 +4,13 @@ import pandas as pd
 import random
 
 st.set_page_config(page_title="EVM – Biomedical Support Dashboard", layout="centered")
+st.markdown("""
+    <style>
+        button[title="View fullscreen"] {
+            display: none !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 st.title("Earned Value Management (EVM): Concept and Industry Applications")
 
@@ -15,18 +22,19 @@ As an example, we apply EVM to a **Biomedical Technical Assistance Program** tha
 The program includes technician training, module replacement, remote support, and preventive maintenance. Ensuring budget discipline and operational efficiency is key to delivering impact while meeting donor compliance standards.
 """)
 
+# Scenario selection
+scenario = st.radio("Select a project scenario:", ["Positive", "Neutral", "Negative"])
+
 st.header("Monitoring Objectives")
 st.write("""
-This interface allows:
+This dashboard covers essential aspects of project financial and schedule performance, including:
+
 - **Cost and schedule performance tracking** through Earned Value Management (EVM).
 - Accurate **Actual vs. Budget comparisons** using baseline budgets.
 - **Forecasting of cost at completion (EAC)** to anticipate funding needs.
-- Clear variance analysis to feed into **strategic reporting for senior leadership**.
+- Clear variance analysis to support **strategic reporting for senior leadership**.
 """)
 
-# Scenario selection
-st.subheader("Scenario Simulation for EVM Trends")
-scenario = st.radio("Select a project scenario:", ["Positive", "Neutral", "Negative"])
 
 # Simulate monthly PV first (stable baseline)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
@@ -71,16 +79,28 @@ with col2:
     st.metric("⏱ Schedule Performance Index (SPI)", f"{SPI:.2f}", delta=f"{SV:.0f} k€")
     st.metric("📊 Estimate at Completion (EAC)", f"{EAC:.0f} k€")
 
+
+st.info("""
+- **Cost Performance Index (CPI)**: Measures cost efficiency of the work performed. A CPI below 1 indicates cost overruns.
+- **Estimate to Complete (ETC)**: Forecast of the remaining cost needed to complete the project based on current performance.
+- **Schedule Performance Index (SPI)**: Measures schedule efficiency. An SPI below 1 means the project is behind schedule.
+- **Estimate at Completion (EAC)**: Projected total cost of the project at completion, factoring in current trends.
+""")
+
+
 # Financial Status Messages
 st.header("Financial Status Analysis")
-if CPI >= 1:
-    st.success("✅ The project is currently under budget.")
-else:
-    st.error("⚠️ The project is over budget.")
-if SPI >= 1:
-    st.success("📈 The project is ahead of schedule.")
-else:
-    st.warning("📉 The project is behind schedule.")
+col1, col2 = st.columns(2)
+with col1:
+    if CPI >= 1:
+        st.success("✅ The project is currently under budget.")
+    else:
+        st.error("⚠️ The project is over budget.")
+with col2:
+    if SPI >= 1:
+        st.success("📈 The project is ahead of schedule.")
+    else:
+        st.warning("📉 The project is behind schedule.")
 
 # Financial Breakdown Chart
 st.header("Financial Status & Remaining Work Overview")
@@ -122,6 +142,49 @@ This chart consolidates:
 - **BAC / EAC Lines**: Show original and projected total costs.  
 
 ⚠️ If **EAC exceeds BAC**, the red line signals a budget overrun risk.
+""")
+
+
+# EVM Trends Plot with scenario data
+st.header("Simulated EVM Trends Over Time")
+
+df_evm = pd.DataFrame({
+    "Month": months,
+    "Planned Value (PV)": pv_series,
+    "Earned Value (EV)": ev_series,
+    "Actual Cost (AC)": ac_series
+})
+
+fig_evm, ax_evm = plt.subplots(figsize=(10, 5))
+ax_evm.plot(df_evm["Month"], df_evm["Planned Value (PV)"], marker='o', label="PV", color="#1f77b4")
+ax_evm.plot(df_evm["Month"], df_evm["Earned Value (EV)"], marker='o', label="EV", color="#2ca02c")
+ax_evm.plot(df_evm["Month"], df_evm["Actual Cost (AC)"], marker='o', label="AC", color="#d62728")
+
+for i in range(len(months)):
+    x = df_evm["Month"][i]
+    if df_evm["Earned Value (EV)"][i] < df_evm["Planned Value (PV)"][i]:
+        ax_evm.plot(x, df_evm["Earned Value (EV)"][i], 'ro', markersize=10, markeredgecolor='black')
+        ax_evm.annotate("Behind Schedule", xy=(x, df_evm["Earned Value (EV)"][i]),
+                        xytext=(0, -30), textcoords="offset points",
+                        ha='center', fontsize=8, color='red', fontweight='bold')
+    if df_evm["Actual Cost (AC)"][i] > df_evm["Earned Value (EV)"][i]:
+        ax_evm.plot(x, df_evm["Actual Cost (AC)"][i], 'ro', markersize=10, markeredgecolor='black')
+        ax_evm.annotate("Over Budget", xy=(x, df_evm["Actual Cost (AC)"][i]),
+                        xytext=(0, 15), textcoords="offset points",
+                        ha='center', fontsize=8, color='red', fontweight='bold')
+
+ax_evm.set_ylabel("Amount (k€)")
+ax_evm.set_title(f"EVM Trends – {scenario} Scenario")
+ax_evm.legend()
+ax_evm.grid(True)
+st.pyplot(fig_evm)
+
+st.info("""
+What we can learn from this plot:  
+- Visualize how planned value (PV), earned value (EV), and actual cost (AC) evolve over time.  
+- Identify periods where the project is ahead or behind schedule and under or over budget.  
+- Spot trends early to enable proactive management decisions and timely corrective actions.  
+- Understand the overall project health to support strategic reporting and forecasting.
 """)
 
 # Variance Bar Chart (Key Indicators Overview)
@@ -174,49 +237,6 @@ Compare this to the original Budget at Completion (BAC) to identify any major bu
 
 
 
-# EVM Trends Plot with scenario data
-st.header("Simulated EVM Trends Over Time")
-
-df_evm = pd.DataFrame({
-    "Month": months,
-    "Planned Value (PV)": pv_series,
-    "Earned Value (EV)": ev_series,
-    "Actual Cost (AC)": ac_series
-})
-
-fig_evm, ax_evm = plt.subplots(figsize=(10, 5))
-ax_evm.plot(df_evm["Month"], df_evm["Planned Value (PV)"], marker='o', label="PV", color="#1f77b4")
-ax_evm.plot(df_evm["Month"], df_evm["Earned Value (EV)"], marker='o', label="EV", color="#2ca02c")
-ax_evm.plot(df_evm["Month"], df_evm["Actual Cost (AC)"], marker='o', label="AC", color="#d62728")
-
-for i in range(len(months)):
-    x = df_evm["Month"][i]
-    if df_evm["Earned Value (EV)"][i] < df_evm["Planned Value (PV)"][i]:
-        ax_evm.plot(x, df_evm["Earned Value (EV)"][i], 'ro', markersize=10, markeredgecolor='black')
-        ax_evm.annotate("Behind Schedule", xy=(x, df_evm["Earned Value (EV)"][i]),
-                        xytext=(0, -30), textcoords="offset points",
-                        ha='center', fontsize=8, color='red', fontweight='bold')
-    if df_evm["Actual Cost (AC)"][i] > df_evm["Earned Value (EV)"][i]:
-        ax_evm.plot(x, df_evm["Actual Cost (AC)"][i], 'ro', markersize=10, markeredgecolor='black')
-        ax_evm.annotate("Over Budget", xy=(x, df_evm["Actual Cost (AC)"][i]),
-                        xytext=(0, 15), textcoords="offset points",
-                        ha='center', fontsize=8, color='red', fontweight='bold')
-
-ax_evm.set_ylabel("Amount (k€)")
-ax_evm.set_title(f"EVM Trends – {scenario} Scenario")
-ax_evm.legend()
-ax_evm.grid(True)
-st.pyplot(fig_evm)
-
-st.info("""
-What we can learn from this plot:  
-- Visualize how planned value (PV), earned value (EV), and actual cost (AC) evolve over time.  
-- Identify periods where the project is ahead or behind schedule and under or over budget.  
-- Spot trends early to enable proactive management decisions and timely corrective actions.  
-- Understand the overall project health to support strategic reporting and forecasting.
-""")
-
-
 
 # Future Ideas
 st.header("To Go Further – Toward Real-Time Automation")
@@ -258,3 +278,4 @@ with col1:
     st.image("https://img.uxcel.com/tags/notifications-1700498330224-2x.jpg", width=image_size)
 with col2:
     st.write("Automatically notify users when the project is overspending or delayed, with suggested corrective actions.")
+
