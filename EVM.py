@@ -6,12 +6,14 @@ import random
 st.set_page_config(page_title="EVM – Biomedical Support Dashboard", layout="centered")
 st.markdown("""
     <style>
-        /* Hide full screen icon on images */
-        button[aria-label="View fullscreen"] {
+        button[title="View fullscreen"] {
             display: none !important;
         }
-        /* Hide link icon on headers */
-        section [data-testid="stMarkdownContainer"] a[href^="#"] {
+    </style>
+""", unsafe_allow_html=True)
+st.markdown("""
+    <style>
+        .css-1v0mbdj.e1fqkh3o3:hover > div > a {
             display: none !important;
         }
     </style>
