@@ -5,12 +5,13 @@ import random
 
 st.set_page_config(page_title="EVM – Biomedical Support Dashboard", layout="centered")
 
-st.title("Earned Value Management (EVM) – Biomedical Technical Assistance Program")
+st.title("Earned Value Management (EVM): Concept and Industry Applications")
 
 st.header("Project Context")
 st.write("""
-This dashboard illustrates the financial monitoring of a **technical support program** for **molecular diagnostic systems** deployed in public health laboratories.
+This dashboard illustrates the financial monitoring using Earned Value Management (EVM), a widely adopted project control technique in various industries.
 
+As an example, we apply EVM to a **Biomedical Technical Assistance Program** that supports molecular diagnostic systems deployed in public health laboratories.
 The program includes technician training, module replacement, remote support, and preventive maintenance. Ensuring budget discipline and operational efficiency is key to delivering impact while meeting donor compliance standards.
 """)
 
