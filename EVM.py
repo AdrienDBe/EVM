@@ -46,7 +46,7 @@ st.write("""
 This dashboard illustrates the financial monitoring using Earned Value Management (EVM), a widely adopted project control technique in various industries.
 
 As an example, we apply EVM to a **Biomedical Technical Assistance Program** that supports molecular diagnostic systems deployed in public health laboratories.
-The program includes technician training, module replacement, remote support, and preventive maintenance. Ensuring budget discipline and operational efficiency is key to delivering impact while meeting donor compliance standards.
+The program includes technician training, module replacement, remote support, and preventive maintenance. Ensuring budget discipline and operational efficiency is key to delivering impact and optimal project outcomes.
 """)
 
 # Scenario selection
