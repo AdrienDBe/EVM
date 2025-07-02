@@ -13,7 +13,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 st.markdown("""
     <style>
-        .css-1v0mbdj.e1fqkh3o3:hover > div > a {
+        /* Hide link icon on headers */
+        section [data-testid="stMarkdownContainer"] a[href^="#"] {
             display: none !important;
         }
     </style>
