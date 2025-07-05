@@ -172,45 +172,85 @@ This chart consolidates:
 """)
 
 
-# EVM Trends Plot with scenario data
-st.header("Simulated EVM Trends Over Time")
+# S-Curve with Highlighted Variance at Key Points Only
+import numpy as np
+from datetime import datetime
 
-df_evm = pd.DataFrame({
-    "Month": months,
-    "Planned Value (PV)": pv_series,
-    "Earned Value (EV)": ev_series,
-    "Actual Cost (AC)": ac_series
-})
+st.header("Project Performance S-Curve")
+st.write("""
+This curve shows the progression of the planned budget (PV), earned value (EV), and actual costs (AC).
+Critical points (delays or cost overruns) are highlighted as they appear.
+""")
 
-fig_evm, ax_evm = plt.subplots(figsize=(10, 5))
-ax_evm.plot(df_evm["Month"], df_evm["Planned Value (PV)"], marker='o', label="PV", color="#1f77b4")
-ax_evm.plot(df_evm["Month"], df_evm["Earned Value (EV)"], marker='o', label="EV", color="#2ca02c")
-ax_evm.plot(df_evm["Month"], df_evm["Actual Cost (AC)"], marker='o', label="AC", color="#d62728")
+# Time configuration
+days = np.arange(0, 100)
+today_day = 60  # Current position in the project (can be linked to the actual date)
+total_value = 2500
 
-for i in range(len(months)):
-    x = df_evm["Month"][i]
-    if df_evm["Earned Value (EV)"][i] < df_evm["Planned Value (PV)"][i]:
-        ax_evm.plot(x, df_evm["Earned Value (EV)"][i], 'ro', markersize=10, markeredgecolor='black')
-        ax_evm.annotate("Behind Schedule", xy=(x, df_evm["Earned Value (EV)"][i]),
-                        xytext=(0, -30), textcoords="offset points",
-                        ha='center', fontsize=8, color='red', fontweight='bold')
-    if df_evm["Actual Cost (AC)"][i] > df_evm["Earned Value (EV)"][i]:
-        ax_evm.plot(x, df_evm["Actual Cost (AC)"][i], 'ro', markersize=10, markeredgecolor='black')
-        ax_evm.annotate("Over Budget", xy=(x, df_evm["Actual Cost (AC)"][i]),
-                        xytext=(0, 15), textcoords="offset points",
-                        ha='center', fontsize=8, color='red', fontweight='bold')
+# Sigmoid function
+def s_curve(x, L=2500, k=0.1, x0=50, scale=1, shift=0):
+    """
+    L: max value (usually BAC)
+    k: steepness
+    x0: midpoint (controls inflection point)
+    scale: vertical scaling
+    shift: horizontal shift
+    """
+    return scale * L / (1 + np.exp(-k * (x - x0 + shift)))
 
-ax_evm.set_ylabel("Amount (k€)")
-ax_evm.set_title(f"EVM Trends – {scenario} Scenario")
-ax_evm.legend()
-ax_evm.grid(True)
-st.pyplot(fig_evm)
+# Calculate curves truncated to "today"
+pv = s_curve(days)
+
+# Adjust EV and AC curves based on the scenario
+if scenario == "Positive":
+    ev_full = s_curve(days, scale=1.1, shift=-5)  # More optimistic earned value
+    ac_full = s_curve(days, scale=0.9, shift=-10)  # Lower actual cost
+elif scenario == "Negative":
+    ev_full = s_curve(days, scale=0.9, shift=5)  # Less optimistic earned value
+    ac_full = s_curve(days, scale=1.1, shift=10)  # Higher actual cost
+else:  # Neutral
+    ev_full = s_curve(days, scale=1.0, shift=0)
+    ac_full = s_curve(days, scale=1.0, shift=0)
+
+# Cut the curves to "today"
+pv_cut = pv[:today_day + 1]
+ev_cut = ev_full[:today_day + 1]
+ac_cut = ac_full[:today_day + 1]
+days_cut = days[:today_day + 1]
+
+# Future projection of AC
+future_days = np.arange(today_day, 110)
+slope = (ac_cut[-1] - ac_cut[-6]) / 5  # Slope of the last 5 days
+ac_projection = ac_cut[-1] + (future_days - today_day) * slope
+ac_future_curve = s_curve(future_days, scale=1.1 if scenario == "Negative" else 1.0 if scenario == "Neutral" else 0.9, shift=10 if scenario == "Negative" else 0 if scenario == "Neutral" else -10)
+
+# Create the plot
+fig_scurve, ax = plt.subplots(figsize=(10, 5))
+
+# Main plots
+ax.plot(days_cut, pv_cut, label="PV (Planned Value)", color="#1f77b4")
+ax.plot(days_cut, ev_cut, label="EV (Earned Value)", color="#2ca02c")
+ax.plot(days_cut, ac_cut, label="AC (Actual Cost)", color="#d62728")
+ax.plot(future_days, ac_future_curve, linestyle="--", color="red", label="AC Projection")
+
+# "Today" line
+ax.axvline(today_day, color='black', linestyle=':', linewidth=1.5, label=f"Today")
+
+
+# Final format
+ax.set_xlabel("Time (days)")
+ax.set_ylabel("Amount (k€)")
+ax.set_title(f"S-Curve – {scenario} Scenario")
+ax.legend()
+ax.grid(True)
+
+st.pyplot(fig_scurve)
 
 st.info("""
-What we can learn from this plot:  
-- Visualize how planned value (PV), earned value (EV), and actual cost (AC) evolve over time.  
-- Identify periods where the project is ahead or behind schedule and under or over budget.  
-- Spot trends early to enable proactive management decisions and timely corrective actions.  
+What we can learn from this plot:
+- Visualize how planned value (PV), earned value (EV), and actual cost (AC) evolve over time.
+- Identify periods where the project is ahead or behind schedule and under or over budget.
+- Spot trends early to enable proactive management decisions and timely corrective actions.
 - Understand the overall project health to support strategic reporting and forecasting.
 """)
 
