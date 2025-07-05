@@ -23,7 +23,9 @@ jobs:
 
     - name: Push changes
       env:
-        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+        PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
       run: |
-        git push
+        git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}
+        git push origin HEAD:main || echo "Nothing to push"
+
  
