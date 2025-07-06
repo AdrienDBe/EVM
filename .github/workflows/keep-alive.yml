@@ -1,5 +1,4 @@
 name: Keep App Alive
-
 on:
   schedule:
     - cron: '0 */5 * * *'  # Toutes les 5 heures
@@ -8,12 +7,12 @@ on:
 jobs:
   keep-alive:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Important pour pouvoir push proprement
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
 
       - name: Set up Git config
         run: |
@@ -22,12 +21,8 @@ jobs:
 
       - name: Create empty commit
         run: |
-          git commit --allow-empty -m "keep-alive: $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          git commit --allow-empty -m "keep-alive: $(date '+%Y-%m-%d %H:%M:%S')"
 
-      - name: Set remote URL with PAT and push
-        env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+      - name: Push changes
         run: |
-          git remote set-url origin https://AdrienDBe:${PAT_TOKEN}@github.com/AdrienDBe/EVM.git
-          git pull --rebase origin main
           git push origin main
