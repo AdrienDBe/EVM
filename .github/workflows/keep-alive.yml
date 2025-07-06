@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Configure Git
         run: |
@@ -22,9 +24,9 @@ jobs:
         run: |
           git commit --allow-empty -m "chore: keep-alive $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
 
-      - name: Pull and Push changes
+      - name: Pull and push
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git pull --rebase origin main
           git push origin main
